@@ -1,0 +1,86 @@
+﻿
+@model BSModeController.MessageBoardViewModel
+
+@{
+	ViewData["Title"] = "BSMode MessageBoard";
+}
+
+@if (!string.IsNullOrEmpty(Model.PostResult))
+{
+	<script>
+		var result =@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PostResult));
+		var resultmessage=@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PostResultMessage));
+	</script>
+	<script>
+		setTimeout(function () {
+			if (result == "Done") {
+				alert("Operation Done\r\n" + resultmessage);
+			}
+			else if (result == "Failed") {
+				alert("Operation Failed\r\n" + resultmessage);
+			}
+			else {
+				alert(resultmessage);
+			}
+		}, 100)
+	</script>
+}
+
+<form action="" method="POST">
+	<input type="hidden" name="_state" value='@System.Text.Json.JsonSerializer.Serialize(Model.State)' />
+
+	<p>
+		B/S GET/POST Mode Implementation - <a href="/BlazorModeMessageBoard">Try Blazor Mode</a>
+	</p>
+
+	<hr />
+
+	@if (Model.Msgs.Count == 0)
+	{
+		<h4 style="margin:64px 0;">Oops, there's no any message.</h4>
+	}
+	@foreach (var msg in Model.Msgs)
+	{
+		<div class="mymsgitem">
+
+			<div class="mymsgaction">
+				<button name="post_action" value='@("Delete:"+msg.MsgId)' onclick="return confirm('Are you sure ?')">Delete</button>
+			</div>
+			<div class="mymsgid">#@msg.MsgId</div>
+			<div class="mymsgusername">@msg.UserName</div>
+			<div class="mymsgtitle">@msg.Title</div>
+			<div class="mymsgmessage">@msg.Message</div>
+			@foreach (string comment in msg.Comments)
+			{
+				<div class="mymsgcomment">@comment</div>
+			}
+			<div style="text-align:right">
+				<span class="mymsgtime">@(msg.PostTime.ToString("yyyy-MM-dd HH:mm:ss"))</span>
+				<input name='@("inp_comment_"+msg.MsgId)' /><button name="post_action" value='@("Comment:"+msg.MsgId)'>Add comment</button>
+			</div>
+		</div>
+	}
+
+	<hr />
+
+	<div style="border:solid 1px #eee;margin:12px 0px;padding:12px">
+		<div>Post a message</div>
+		<div>UserName:</div>
+		<div>
+			<input type="text" name="inp_username" value="@Model.State.InputUserName" style="width: 250px" />
+		</div>
+		<div>Title:</div>
+		<div>
+			<input type="text" name="inp_title" value="@Model.State.InputTitle" style="width: 250px" />
+		</div>
+		<div>Message:</div>
+		<div>
+			<textarea name="inp_message" style="width:250px;height:120px">@Model.State.InputMessage</textarea>
+		</div>
+
+		<div>
+			<button type="submit" class="btn btn-primary" name="post_action" value="PostMsg">Post Message</button>
+		</div>
+	</div>
+
+</form>

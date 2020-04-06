@@ -1,0 +1,54 @@
+﻿
+h3,h4 {
+	color: darkred;
+}
+
+.mymsgitem {
+	border: solid 1px #ccc;
+	margin: 12px 3px;
+}
+
+
+.mymsgusername {
+	float: right;
+	background-color: #eee;
+	padding: 3px;
+	color: blue;
+}
+
+.mymsgid {
+	float: right;
+	background-color: #eee;
+	padding: 3px;
+}
+
+.mymsgaction {
+	float: right;
+	background-color: #eee;
+}
+
+.mymsgtitle {
+	padding: 3px;
+	font-weight: bold;
+	background-color: #eee;
+}
+
+.mymsgmessage {
+	padding: 12px;
+	font-style: italic;
+	white-space: pre;
+}
+
+.mymsgcomment {
+	margin: 9px 0 9px 24px;
+	padding-left: 12px;
+	border-left: solid 1px red;
+	color: #666;
+	font-size: 0.8em;
+}
+.mymsgtime {
+	float: left;
+	padding: 3px;
+	color: #666;
+	font-size: 0.8em;
+}

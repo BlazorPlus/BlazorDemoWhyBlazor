@@ -1,0 +1,171 @@
+﻿@page "/BlazorModeMessageBoard"
+
+@inject IJSRuntime jsr
+
+@code
+{
+	string InputUserName;
+	string InputTitle;
+	string InputMessage;
+
+	void PostMsg(EditContext editctx)
+	{
+		if (string.IsNullOrWhiteSpace(InputUserName))
+		{
+			Alert("Operation failed.\r\nPlease type username");
+			return;
+		}
+		if (string.IsNullOrWhiteSpace(InputTitle))
+		{
+			Alert("Operation failed.\r\nPlease type title");
+			return;
+		}
+		if (string.IsNullOrWhiteSpace(InputMessage))
+		{
+			Alert("Operation failed.\r\nPlease type message");
+			return;
+		}
+
+		var msg = MyMsg.AddMsg(InputUserName, InputTitle, InputMessage);
+		InputTitle = "";
+		InputMessage = "";
+
+		MsgRowList.Add(new MsgRow { Page = this, Msg = msg });
+
+		editctx.MarkAsUnmodified();
+		StateHasChanged();
+		Alert("Operation Done.\r\nMessage #" + msg.MsgId + " have been added");
+	}
+
+
+	void Alert(string msg)
+	{
+		var t = AlertDelay(msg);
+	}
+	async Task AlertDelay(string msg)
+	{
+		await Task.Delay(100);
+		await jsr.InvokeVoidAsync("alert", msg);
+	}
+
+	class MsgRow
+	{
+		public MyMsg Msg;
+		public string InputComment = "";
+		public BlazorModeMessageBoard Page;
+
+		MyMsg GetMessageAgain()
+		{
+			var msg2 = MyMsg.Msgs.Where(v => v.MsgId == this.Msg.MsgId).FirstOrDefault();
+			if (msg2 != null)
+				return msg2;
+			Page.StateHasChanged();
+			Page.Alert("Operation Failed\r\nThe message maybe deleted already");
+			Page.MsgRowList.Remove(this);
+			return null;
+		}
+
+		public async Task DoDelete()
+		{
+			if (!await Page.jsr.InvokeAsync<bool>("confirm", "Are you sure?"))
+				return;
+			var msg2 = GetMessageAgain();
+			if (msg2 == null)
+				return;
+			MyMsg.Msgs.Remove(msg2);
+			Page.MsgRowList.Remove(this);
+			Page.StateHasChanged();
+			Page.Alert("Operation Done\r\nMessage #" + msg2.MsgId + " have been deleted");
+		}
+
+		public void AddComment(EditContext editctx)
+		{
+			var msg2 = GetMessageAgain();
+			if (msg2 == null)
+				return;
+			if (string.IsNullOrWhiteSpace(this.InputComment))
+			{
+				Page.Alert("Operation Failed\r\nPlease type comment");
+				return;
+			}
+			msg2.Comments.Add(this.InputComment);
+			this.InputComment = "";
+			editctx.MarkAsUnmodified();
+			Page.StateHasChanged();
+			Page.Alert("Operation Done\r\nComment have been added");
+		}
+
+	}
+
+	List<MsgRow> MsgRowList;
+}
+
+@{
+	if (MsgRowList == null)
+	{
+		MsgRowList = MyMsg.Msgs.Select(v => new MsgRow { Page = this, Msg = v }).ToList();
+	}
+}
+
+<p>
+	Blazor Mode Implementation
+</p>
+
+<hr />
+
+@if (MsgRowList.Count == 0)
+{
+	<h4 style="margin:64px 0;">Oops, there's no any message.</h4>
+}
+
+@foreach (var msgrow in MsgRowList)
+{
+	var msg = msgrow.Msg;
+
+	<div class="mymsgitem">
+
+		<div class="mymsgaction">
+			<button @onclick="()=>msgrow.DoDelete()">Delete</button>
+		</div>
+		<div class="mymsgid">#@msg.MsgId</div>
+		<div class="mymsgusername">@msg.UserName</div>
+		<div class="mymsgtitle">@msg.Title</div>
+		<div class="mymsgmessage">@msg.Message</div>
+		@foreach (string comment in msg.Comments)
+		{
+			<div class="mymsgcomment">@comment</div>
+		}
+		<div style="text-align:right">
+			<span class="mymsgtime">@(msg.PostTime.ToString("yyyy-MM-dd HH:mm:ss"))</span>
+			<EditForm Model="msgrow" Context="editctx">
+				<InputText @bind-Value="msgrow.InputComment" />
+				<button @onclick="()=>msgrow.AddComment(editctx)">Add comment</button>
+			</EditForm>
+		</div>
+	</div>
+}
+
+<hr />
+
+<EditForm Model="this" Context="editctx">
+	<div style="border:solid 1px #eee;margin:12px 0px;padding:12px">
+		<div>Post a message</div>
+		<div>UserName:</div>
+		<div>
+			<InputText @bind-Value="InputUserName" style="width: 250px" />
+		</div>
+		<div>Title:</div>
+		<div>
+			<InputText @bind-Value="InputTitle" style="width: 250px" />
+		</div>
+		<div>Message:</div>
+		<div>
+			<InputTextArea @bind-Value="InputMessage" style="width: 250px;height:120px" />
+		</div>
+
+		<div>
+			<button class="btn btn-primary" @onclick="()=>PostMsg(editctx)">Post Message</button>
+		</div>
+	</div>
+
+</EditForm>
